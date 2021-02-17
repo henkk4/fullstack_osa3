@@ -1,5 +1,37 @@
     const express = require('express')
+    const morgan = require('morgan')
+    const cors = require('cors')
+
     const app = express()
+
+    app.use(cors())
+    app.use(express.json()) 
+
+    morgan.token('postBody', function (req, res) {
+         return JSON.stringify(req.body)
+    })
+
+    app.use(morgan(function (tokens, req, res) {
+        if (tokens.method(req, res) === 'POST') {
+            return [
+                tokens.method(req, res),
+                tokens.url(req, res),
+                tokens.status(req, res),
+                tokens.res(req, res, 'content-length'), '-',
+                tokens['response-time'](req, res), 'ms',
+                tokens.postBody(req, res)
+            ].join(' ')
+        }
+        else {
+            return [
+                tokens.method(req, res),
+                tokens.url(req, res),
+                tokens.status(req, res),
+                tokens.res(req, res, 'content-length'), '-',
+                tokens['response-time'](req, res), 'ms',
+            ].join(' ')
+        }
+    }))
 
     let persons = [
       {
@@ -23,11 +55,6 @@
         "id": 4
       }
     ]
-
-    
-    app.get('/', (req, res) => {
-      res.send('<h1>Persons</h1>')
-    })
     
     app.get('/api/persons', (req, res) => {
       res.json(persons)
@@ -44,6 +71,54 @@
         }
       })
 
+    const generateId = () => {
+        let range = persons.length * 10
+        let newId = Math.floor(Math.random() * Math.floor(range))
+        const ids = persons.map(person => person.id)
+        if (ids.find(oneId => oneId === newId)) {
+            newId = generateId()
+        }
+        return newId
+    }
+    const nameIsUnique = (name) => {
+        let unique = true
+        const names = persons.map(person => person.name)
+        if (names.find(oneName => oneName === name)) {
+            unique = false
+        }
+        return unique
+    }
+
+    app.post('/api/persons', (request, response) => {
+        const body = request.body
+      
+        if (!body.name) {
+          return response.status(400).json({ 
+            error: 'name is missing' 
+          })
+        }
+        if (!body.number) {
+            return response.status(400).json({ 
+              error: 'number is missing' 
+            })
+        }
+        if (!nameIsUnique(body.name)) {
+            return response.status(400).json({ 
+              error: 'name must be unique' 
+            })
+        }
+
+        const person = {
+          name: body.name,
+          number: body.number,
+          id: generateId(),
+        }
+      
+        persons = persons.concat(person)
+      
+        response.json(person)
+      })
+
       app.delete('/api/persons/:id', (request, response) => {
         const id = Number(request.params.id)
         persons = persons.filter(person => person.id !== id)
@@ -57,7 +132,7 @@
         res.send(info)
       })
     
-    const PORT = 3001
+    const PORT = process.env.PORT || 3001
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
     })
