@@ -1,2 +1,2 @@
 # fullstack_osa3
-fullstackopen osan 3 tehtävät
+http://fierce-caverns-60342.herokuapp.com/api/persons
