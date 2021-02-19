@@ -1,7 +1,7 @@
-POST http://fierce-caverns-60342.herokuapp.com/api/persons
+POST http://localhost:3001/api/persons
 Content-Type: application/json
 
 {
-    "name": "Matti Mannonnnen",
-    "number": "050505050"
+    "name": "Ma",
+    "number": "0505848480"
 }
